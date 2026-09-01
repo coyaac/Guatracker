@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+/* Tema claro/oscuro por preferencia del sistema (RF-906). Override manual se agrega en Fase 4. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+[data-theme='dark'] body {
+  @apply bg-slate-950 text-slate-100;
+}

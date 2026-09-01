@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<span style="display:inline-flex;align-items:center;justify-content:center;flex:none">{{ glifo }}</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:80,&quot;height&quot;:80},&quot;glyph&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;agua&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:24,&quot;tsType&quot;:&quot;number&quot;}}">
+const MAPA = {
+  agua: 'drop', gota: 'drop', comida: 'bowl-food', picoteo: 'cookie',
+  natacion: 'person-simple-swim', pesas: 'barbell', sueno: 'moon',
+  peso: 'scales', cintura: 'ruler', calendario: 'calendar-blank',
+  racha: 'flame', ajustes: 'sliders-horizontal', exportar: 'export',
+  advertencia: 'warning', editar: 'pencil-simple', deshacer: 'arrow-counter-clockwise',
+  mas: 'plus', menos: 'minus', cerrar: 'x', check: 'check', reloj: 'clock',
+  info: 'info', grafico: 'chart-bar', casa: 'house', chevron: 'caret-right',
+  flechaAbajo: 'arrow-down', flechaArriba: 'arrow-up', igual: 'equals'
+};
+class Component extends DCLogic {
+  renderVals() {
+    const nombre = MAPA[this.props.glyph] || 'info';
+    const s = Number(this.props.size || 24);
+    return {
+      glifo: React.createElement('i', {
+        className: 'ph ph-' + nombre,
+        'aria-hidden': 'true',
+        style: { fontSize: s + 'px', lineHeight: 1, display: 'block' }
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
