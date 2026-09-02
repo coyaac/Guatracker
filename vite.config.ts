@@ -13,12 +13,12 @@ export default defineConfig({
       registerType: 'prompt', // RNF-06: aviso de "actualizar", no auto
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Bitácora',
-        short_name: 'Bitácora',
+        name: 'Guatracker',
+        short_name: 'Guatracker',
         description: 'Seguimiento personal de hábitos',
         lang: 'es-CL',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#0e101a',
+        background_color: '#0e101a',
         display: 'standalone',
         start_url: '/',
         icons: [

@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { dayAggregate, weekAggregate } from '../../db/aggregate'
 import { getSettings } from '../../db/repositories'
-import { indexTier, weeklyDimensions, weeklyIndex } from '../../domain/scoring'
+import { indexTier, weeklyDimensions, weeklyIndex, type Tier } from '../../domain/scoring'
 import type { Dimension } from '../../domain/goals'
 import { Ring } from '../../components/Ring'
 import { QuickLog } from '../quicklog/QuickLog'
@@ -14,11 +14,19 @@ const DIM_LABEL: Record<Dimension, string> = {
   sleep: 'Sueño',
 }
 
-const TIER_CLASS: Record<ReturnType<typeof indexTier>, string> = {
-  excelente: 'text-emerald-600 dark:text-emerald-400',
-  bien: 'text-sky-600 dark:text-sky-400',
-  'a medias': 'text-amber-600 dark:text-amber-400',
-  flojo: 'text-rose-600 dark:text-rose-400',
+const DIM_COLOR: Record<Dimension, string> = {
+  nutrition: 'var(--color-dim-nutrition)',
+  snacking: 'var(--color-dim-snacking)',
+  hydration: 'var(--color-dim-hydration)',
+  training: 'var(--color-dim-training)',
+  sleep: 'var(--color-dim-sleep)',
+}
+
+const TIER_COLOR: Record<Tier, string> = {
+  excelente: 'var(--color-tier-excelente)',
+  bien: 'var(--color-tier-bien)',
+  'a medias': 'var(--color-tier-medias)',
+  flojo: 'var(--color-tier-flojo)',
 }
 
 export function Dashboard(): React.ReactElement {
@@ -27,39 +35,48 @@ export function Dashboard(): React.ReactElement {
   const day = useLiveQuery(() => dayAggregate())
 
   if (!settings || !week || !day) {
-    return <p className="p-6 text-slate-500">Cargando…</p>
+    return <p className="p-6 text-ink-3">Cargando…</p>
   }
 
   const goals = settings.goals
   const dims = weeklyDimensions(week, goals)
   const index = weeklyIndex(week, goals)
   const tier = indexTier(index)
+  const tierColor = TIER_COLOR[tier]
   const hasData = week.sleepNights.length > 0 || week.waterByDay.some((w) => w > 0) || week.fastFood > 0
 
   const missing = whatIsMissing(day, goals)
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-6 p-4 pb-24">
+    <div className="mx-auto flex max-w-md flex-col gap-7 px-4 pt-6 pb-24">
       <header className="text-center">
-        <p className="text-sm text-slate-500">Índice de adherencia semanal</p>
-        <p className={`text-6xl font-bold tabular-nums ${TIER_CLASS[tier]}`}>{index}</p>
-        <p className={`text-sm font-medium ${TIER_CLASS[tier]}`}>
-          {tier} {!hasData && '· aún sin datos esta semana'}
+        <p className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
+          Índice de adherencia · esta semana
         </p>
+        <p className="font-display text-8xl font-semibold leading-none tnum" style={{ color: tierColor }}>
+          {index}
+        </p>
+        <p className="mt-1 font-display text-lg font-semibold uppercase tracking-wide" style={{ color: tierColor }}>
+          {tier}
+        </p>
+        {!hasData && <p className="mt-1 text-sm text-ink-2">Aún sin datos esta semana. Registra algo para empezar.</p>}
       </header>
 
-      <section aria-label="Dimensiones de la semana" className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+      <section aria-label="Dimensiones de la semana" className="grid grid-cols-5 gap-1">
         {(Object.keys(dims) as Dimension[]).map((d) => (
-          <Ring key={d} value={dims[d]} label={DIM_LABEL[d]} />
+          <Ring key={d} value={dims[d]} label={DIM_LABEL[d]} color={DIM_COLOR[d]} />
         ))}
       </section>
 
       {missing.length > 0 && (
-        <section aria-label="Qué falta hoy" className="rounded-xl bg-slate-100 p-4 dark:bg-slate-900">
-          <h2 className="mb-2 text-sm font-semibold">Qué falta hoy</h2>
-          <ul className="list-inside list-disc space-y-1 text-sm text-slate-600 dark:text-slate-400">
+        <section aria-label="Qué falta hoy" className="rounded-xl border border-line bg-surface p-4">
+          <h2 className="mb-2 font-display text-base font-semibold uppercase tracking-wide text-ink-2">Qué falta hoy</h2>
+          <ul className="space-y-1.5 text-sm text-ink-2">
             {missing.map((m) => (
-              <li key={m}>{m}</li>
+              <li key={m} className="flex gap-2">
+                <span aria-hidden className="text-accent-soft">›</span>
+                {m}
+              </li>
             ))}
           </ul>
         </section>

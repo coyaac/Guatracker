@@ -12,20 +12,22 @@ export default function App(): React.ReactElement {
   const [view, setView] = useState<View>('dashboard')
 
   // useLiveQuery: undefined = cargando; luego la fila 'app' o su ausencia.
-  if (settings === undefined) return <p className="p-6 text-slate-500">Cargando…</p>
+  if (settings === undefined) return <p className="p-6 text-ink-3">Cargando…</p>
   if (!settings?.onboarded) return <Onboarding />
 
   return (
     <div className="min-h-full">
       {view === 'dashboard' ? <Dashboard /> : <Settings />}
 
-      <nav className="fixed inset-x-0 bottom-0 flex border-t border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+      <nav className="fixed inset-x-0 bottom-0 flex border-t border-line bg-surface/95 backdrop-blur">
         {(['dashboard', 'settings'] as const).map((v) => (
           <button
             key={v}
             onClick={() => setView(v)}
             aria-current={view === v ? 'page' : undefined}
-            className={`min-h-[44px] flex-1 py-3 text-sm font-medium ${view === v ? 'text-sky-600' : 'text-slate-500'}`}
+            className={`min-h-[52px] flex-1 py-3 font-display text-sm font-semibold uppercase tracking-wide transition ${
+              view === v ? 'text-accent-soft' : 'text-ink-3'
+            }`}
           >
             {v === 'dashboard' ? 'Inicio' : 'Ajustes'}
           </button>

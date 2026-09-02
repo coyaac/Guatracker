@@ -15,7 +15,10 @@ export const SETTINGS_DEFAULT: AppSettings = {
   theme: 'system',
 }
 
-export const getSettings = (): Promise<AppSettings | undefined> => db.settings.get('app')
+// Devuelve SETTINGS_DEFAULT (onboarded:false) cuando aún no hay fila, para que
+// useLiveQuery pueda distinguir "cargando" (undefined) de "sin onboarding".
+export const getSettings = async (): Promise<AppSettings> =>
+  (await db.settings.get('app')) ?? SETTINGS_DEFAULT
 
 export async function saveSettings(patch: Partial<AppSettings>): Promise<void> {
   const current = (await getSettings()) ?? SETTINGS_DEFAULT

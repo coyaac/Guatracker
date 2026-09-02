@@ -1,7 +1,54 @@
 @import 'tailwindcss';
 
-/* Tema claro/oscuro por preferencia del sistema (RF-906). Override manual se agrega en Fase 4. */
-@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+/* Fuentes locales (empaquetadas, cero red — RNF-08). Barlow Condensed para
+   números/titulares, Inter para interfaz y texto. */
+@import '@fontsource/barlow-condensed/latin-500.css';
+@import '@fontsource/barlow-condensed/latin-600.css';
+@import '@fontsource/barlow-condensed/latin-700.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-600.css';
+
+/* ── Tokens del sistema Guatracker (tema oscuro, primario) ──
+   Nombrados por rol, nunca por apariencia. Fuente: docs/ design system. */
+@theme {
+  --color-bg: #0e101a; /* fondo profundo */
+  --color-surface: #161826; /* superficie */
+  --color-raised: #232532; /* superficie elevada */
+  --color-line: #2b2e3d; /* borde sutil */
+
+  --color-ink: #e9e9ed; /* texto primario  (14,8:1 AAA) */
+  --color-ink-2: #9397ab; /* texto secundario (6,1:1 AA) */
+  --color-ink-3: #75798c; /* texto terciario  (≥18px) */
+
+  --color-accent: #9184d9; /* blurple — acción y energía */
+  --color-accent-soft: #b5abfc; /* acento sobre oscuro para texto (7,9:1) */
+  --color-accent-deep: #55499a;
+
+  /* Cinco dimensiones del índice */
+  --color-dim-nutrition: #f07b4f; /* naranja */
+  --color-dim-snacking: #ec6d8c; /* rosa */
+  --color-dim-hydration: #45c3e8; /* cian */
+  --color-dim-training: #9184d9; /* blurple */
+  --color-dim-sleep: #7e90e4; /* azul */
+
+  /* Tramos del índice — colores del diseño, umbrales del spec §7.2 */
+  --color-tier-flojo: #e5574e;
+  --color-tier-medias: #e8a33c;
+  --color-tier-bien: #7fd4a8;
+  --color-tier-excelente: #b5abfc;
+
+  --color-ok: #3fbf8f;
+  --color-warn: #e8a33c;
+  --color-danger: #e5574e;
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark; /* controles nativos (time/number) en oscuro */
+}
 
 html,
 body,
@@ -10,9 +57,10 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-bg text-ink font-sans antialiased;
 }
 
-[data-theme='dark'] body {
-  @apply bg-slate-950 text-slate-100;
+/* Números tabulares donde el diseño lo exige (cifras que cambian). */
+.tnum {
+  font-variant-numeric: tabular-nums;
 }

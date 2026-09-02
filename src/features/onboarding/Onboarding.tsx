@@ -5,31 +5,40 @@ import { DEFAULT_GOALS } from '../../domain/goals'
 const MEDICAL_WARNING =
   'Esta app es una herramienta de registro personal, no da consejo médico. Con escoliosis de 32°, valida tu rutina de fuerza con un kinesiólogo o traumatólogo antes de empezar.'
 
+const primaryBtn =
+  'min-h-[52px] rounded-xl bg-accent px-4 py-3 font-display text-lg font-semibold tracking-wide text-bg transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:active:scale-100'
+
+function Wordmark({ size = 44 }: { size?: number }): React.ReactElement {
+  return (
+    <div className="font-display font-semibold leading-none tracking-tight" style={{ fontSize: size }}>
+      <span className="text-accent">Gua</span>
+      <span className="text-ink">tracker</span>
+    </div>
+  )
+}
+
 export function Onboarding(): React.ReactElement {
   const [step, setStep] = useState<'choose' | 'form'>('choose')
 
   if (step === 'choose') {
     return (
       <Screen>
-        <h1 className="text-2xl font-bold">Bitácora</h1>
-        <p className="text-slate-600 dark:text-slate-400">Tu seguimiento de hábitos, 100% en este dispositivo.</p>
+        <Wordmark size={52} />
+        <p className="text-lg text-ink-2">Tu bitácora de hábitos, 100% en este dispositivo.</p>
         <div className="mt-4 flex flex-col gap-3">
-          <button
-            className="min-h-[44px] rounded-xl bg-sky-600 px-4 py-3 font-medium text-white hover:bg-sky-500"
-            onClick={() => setStep('form')}
-          >
+          <button className={primaryBtn} onClick={() => setStep('form')}>
             Empezar de cero
           </button>
           <button
-            className="min-h-[44px] cursor-not-allowed rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-400 dark:border-slate-700"
+            className="min-h-[52px] cursor-not-allowed rounded-xl border border-line px-4 py-3 font-display text-lg font-semibold tracking-wide text-ink-3"
             disabled
             title="Disponible en una próxima versión"
           >
             Importar respaldo · próximamente
           </button>
         </div>
-        <p className="mt-2 text-xs text-slate-500">
-          ¿Cambiaste de celular? Pronto podrás traer tu respaldo `.json` desde aquí.
+        <p className="mt-1 text-sm text-ink-3">
+          ¿Cambiaste de celular? Pronto podrás traer tu respaldo .json desde aquí.
         </p>
       </Screen>
     )
@@ -42,11 +51,13 @@ function OnboardingForm(): React.ReactElement {
   const [heightCm, setHeightCm] = useState('180')
   const [initialWeightKg, setInitialWeightKg] = useState('75')
 
+  const input = 'w-24 rounded-lg border border-line bg-raised px-2 py-1.5 text-right text-ink tnum focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent'
+
   return (
     <Screen>
-      <h1 className="text-xl font-bold">Antes de empezar</h1>
+      <h1 className="font-display text-3xl font-semibold text-ink">Antes de empezar</h1>
 
-      <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+      <div role="note" className="rounded-xl border-l-4 border-warn bg-surface p-4 text-sm text-ink-2">
         {MEDICAL_WARNING}
       </div>
 
@@ -61,20 +72,20 @@ function OnboardingForm(): React.ReactElement {
           })
         }}
       >
-        <label className="flex items-center justify-between gap-2">
+        <label className="flex items-center justify-between gap-2 text-ink-2">
           Estatura (cm)
-          <input type="number" inputMode="numeric" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} className="w-24 rounded-lg border border-slate-300 bg-white px-2 py-1 text-right dark:border-slate-700 dark:bg-slate-800" />
+          <input type="number" inputMode="numeric" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} className={input} />
         </label>
-        <label className="flex items-center justify-between gap-2">
+        <label className="flex items-center justify-between gap-2 text-ink-2">
           Peso inicial (kg)
-          <input type="number" inputMode="decimal" step="0.1" value={initialWeightKg} onChange={(e) => setInitialWeightKg(e.target.value)} className="w-24 rounded-lg border border-slate-300 bg-white px-2 py-1 text-right dark:border-slate-700 dark:bg-slate-800" />
+          <input type="number" inputMode="decimal" step="0.1" value={initialWeightKg} onChange={(e) => setInitialWeightKg(e.target.value)} className={input} />
         </label>
 
-        <p className="text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-sm text-ink-3">
           Se cargan tus metas por defecto (agua 2 L, ≤1 comida rápida, ≥7 h de sueño…). Las puedes ajustar cuando quieras en Ajustes.
         </p>
 
-        <button type="submit" className="min-h-[44px] rounded-xl bg-sky-600 px-4 py-3 font-medium text-white hover:bg-sky-500">
+        <button type="submit" className={primaryBtn}>
           Confirmar y empezar
         </button>
       </form>
