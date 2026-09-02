@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { getSettings, saveSettings } from '../../db/repositories'
 import type { Goals } from '../../domain/goals'
+import type { ThemePref } from '../../app/theme'
+import { requestNotificationPermission } from '../../app/reminders'
+import { ExportButton, ImportButton, WipeButton } from '../backup/BackupControls'
 
 const NUMERIC_FIELDS: { key: keyof Goals; label: string; step?: number }[] = [
   { key: 'fastFoodPerWeek', label: 'Comida rápida / semana' },
@@ -88,6 +91,70 @@ export function Settings(): React.ReactElement {
         Guardar metas
       </button>
       {saved && <p role="status" className="text-center text-sm text-ok">Metas guardadas.</p>}
+
+      {/* Tema (RF-906) */}
+      <Section title="Apariencia">
+        <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-line">
+          {(['light', 'dark', 'system'] as ThemePref[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => void saveSettings({ theme: t })}
+              aria-current={settings.theme === t ? 'true' : undefined}
+              className={`py-2.5 text-sm font-medium transition ${settings.theme === t ? 'bg-raised text-accent-soft' : 'text-ink-3'}`}
+            >
+              {t === 'light' ? 'Claro' : t === 'dark' ? 'Oscuro' : 'Sistema'}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      {/* Recordatorios (RF-905) */}
+      <Section title="Recordatorios">
+        <p className="text-xs text-ink-3">Locales y opcionales. Llegan mientras la app está abierta; nada sale de tu dispositivo.</p>
+        <Reminder label="Registrar el sueño (mañana)" k="sleep" settings={settings} />
+        <Reminder label="Beber agua (tarde)" k="water" settings={settings} />
+        <Reminder label="Hora de dormir (30 min antes de tu meta)" k="bedtime" settings={settings} />
+      </Section>
+
+      {/* Datos (RF-902..904) */}
+      <Section title="Mis datos">
+        <p className="text-xs text-ink-3">Respalda cada tanto: si limpias el navegador o cambias de celular, el .json te devuelve todo.</p>
+        <ExportButton />
+        <ImportButton />
+        <WipeButton />
+      </Section>
     </div>
+  )
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }): React.ReactElement {
+  return (
+    <section className="mt-2 flex flex-col gap-3">
+      <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+function Reminder({ label, k, settings }: { label: string; k: 'sleep' | 'water' | 'bedtime'; settings: { reminders?: { sleep: boolean; water: boolean; bedtime: boolean } } }): React.ReactElement {
+  const on = settings.reminders?.[k] ?? false
+  const toggle = async (): Promise<void> => {
+    const next = !on
+    if (next && !(await requestNotificationPermission())) return // sin permiso, no activa
+    const base = settings.reminders ?? { sleep: false, water: false, bedtime: false }
+    await saveSettings({ reminders: { ...base, [k]: next } })
+  }
+  return (
+    <label className="flex items-center justify-between gap-3 text-sm text-ink-2">
+      {label}
+      <button
+        role="switch"
+        aria-checked={on}
+        onClick={() => void toggle()}
+        className={`h-6 w-11 flex-none rounded-full p-0.5 transition ${on ? 'bg-accent' : 'bg-line'}`}
+      >
+        <span className={`block h-5 w-5 rounded-full bg-bg transition ${on ? 'translate-x-5' : ''}`} />
+      </button>
+    </label>
   )
 }

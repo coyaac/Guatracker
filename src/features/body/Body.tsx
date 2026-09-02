@@ -4,6 +4,7 @@ import { getBodyMetric, listBodyMetrics, saveBodyMetric, todayISO } from '../../
 import { changeSince, changeSinceStart, movingAverage, type MetricPoint } from '../../domain/body'
 import type { BodyMetric } from '../../db/schema'
 import { LineChart } from '../../components/LineChart'
+import { Photos } from './Photos'
 
 const MEASURES: { key: keyof BodyMetric; label: string }[] = [
   { key: 'waistCm', label: 'Cintura (cm)' },
@@ -50,6 +51,7 @@ export function Body(): React.ReactElement {
       </section>
 
       <BodyForm existing={today} />
+      <Photos />
     </div>
   )
 }

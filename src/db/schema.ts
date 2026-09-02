@@ -83,6 +83,12 @@ export interface Routine {
   exerciseIds: string[]
 }
 
+// Foto de progreso (RF-503): Blob guardado local, nunca sube a ningún servidor.
+export interface Photo {
+  id: string
+  blob: Blob
+}
+
 // Ajustes + perfil como fila única (id fijo 'app').
 export interface AppSettings {
   id: 'app'
@@ -91,6 +97,7 @@ export interface AppSettings {
   heightCm?: number
   initialWeightKg?: number
   theme: 'light' | 'dark' | 'system'
+  reminders?: { sleep: boolean; water: boolean; bedtime: boolean } // RF-905, off por defecto
 }
 
 class BitacoraDB extends Dexie {
@@ -103,6 +110,7 @@ class BitacoraDB extends Dexie {
   body!: Table<BodyMetric, ISODate>
   routines!: Table<Routine, string>
   summaries!: Table<WeeklySummary, ISOWeek>
+  photos!: Table<Photo, string>
 
   constructor() {
     super('bitacora')
@@ -126,7 +134,14 @@ class BitacoraDB extends Dexie {
     this.version(4).stores({
       summaries: 'week',
     })
+    // v5 (Fase 4): fotos de progreso (Blob).
+    this.version(5).stores({
+      photos: 'id',
+    })
   }
 }
+
+/** Todas las tablas de datos del usuario, en orden. Fuente única para respaldo/borrado. */
+export const USER_TABLES = ['food', 'days', 'sleep', 'workouts', 'exercises', 'body', 'routines', 'summaries', 'photos', 'settings'] as const
 
 export const db = new BitacoraDB()

@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { completeOnboarding } from '../../db/repositories'
+import { completeOnboarding, saveSettings } from '../../db/repositories'
 import { DEFAULT_GOALS } from '../../domain/goals'
+import { ImportButton } from '../backup/BackupControls'
 
 const MEDICAL_WARNING =
   'Esta app es una herramienta de registro personal, no da consejo médico. Con escoliosis de 32°, valida tu rutina de fuerza con un kinesiólogo o traumatólogo antes de empezar.'
@@ -29,16 +30,10 @@ export function Onboarding(): React.ReactElement {
           <button className={primaryBtn} onClick={() => setStep('form')}>
             Empezar de cero
           </button>
-          <button
-            className="min-h-[52px] cursor-not-allowed rounded-xl border border-line px-4 py-3 font-display text-lg font-semibold tracking-wide text-ink-3"
-            disabled
-            title="Disponible en una próxima versión"
-          >
-            Importar respaldo · próximamente
-          </button>
+          <ImportButton onImported={() => void saveSettings({ onboarded: true })} />
         </div>
         <p className="mt-1 text-sm text-ink-3">
-          ¿Cambiaste de celular? Pronto podrás traer tu respaldo .json desde aquí.
+          ¿Cambiaste de celular? Trae tu respaldo .json y recuperas todo.
         </p>
       </Screen>
     )

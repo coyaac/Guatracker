@@ -9,6 +9,7 @@ import {
   type Exercise,
   type ExerciseSet,
   type FoodEvent,
+  type Photo,
   type Routine,
   type SleepLog,
   type Workout,
@@ -143,6 +144,15 @@ export const getBodyMetric = (date: ISODate): Promise<BodyMetric | undefined> =>
 
 /** Todos los registros corporales ordenados por fecha asc (para gráficos). */
 export const listBodyMetrics = (): Promise<BodyMetric[]> => db.body.orderBy('date').toArray()
+
+// ---- Fotos de progreso (RF-503), guardadas como Blob local ----
+
+export async function savePhoto(blob: Blob): Promise<string> {
+  const id = uid()
+  await db.photos.add({ id, blob })
+  return id
+}
+export const getPhoto = (id: string): Promise<Photo | undefined> => db.photos.get(id)
 
 // ---- Plantillas de rutina (RF-308) ----
 

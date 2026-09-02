@@ -105,13 +105,17 @@ El repo está vacío, así que "ya instalado" = nativo del navegador o ya inclui
 
 ---
 
-## Fase 4 — Robustez
+## Fase 4 — Robustez ✅
 
-**HU:** 10, 15, 16.
-- [ ] Fotos de progreso (Blob) + comparador lado a lado (RF-503/507).
-- [ ] Exportar JSON (fotos en base64) + importar con validación **Zod** (reemplazar/fusionar) + borrar con confirmación escrita (RF-902..904, RNF-23).
-- [ ] Recordatorios locales opcionales (Notification API), off por defecto (RF-905).
-- [ ] Pulido: modo claro/oscuro (RF-906), accesibilidad AA (RNF-16..18), presupuesto de bundle (RNF-03).
+**HU:** 10, 15, 16. · Esquema Dexie v5 con `photos`.
+- [x] Fotos de progreso (Blob local) + comparador lado a lado (`features/body/Photos.tsx`, RF-503/507). Object URLs revocados al desmontar.
+- [x] Exportar JSON (fotos en base64) + importar con validación **Zod** (reemplazar/fusionar) + borrar escribiendo "BORRAR" (`db/backup.ts`, `features/backup/`, RF-902..904, RNF-23). Botón de importar del onboarding **habilitado**. Test del validador (rechaza JSON corrupto/ajeno).
+- [x] Recordatorios locales opcionales (Notification API), off por defecto (`app/reminders.ts`, RF-905). ponytail: entrega en primer plano — el background necesita push remoto (fuera de alcance por diseño).
+- [x] Pulido: tema **claro/oscuro/sistema** con toggle y override (`app/theme.ts` + tokens light en `index.css`, RF-906); aviso de "actualizar" del SW (`app/ReloadPrompt.tsx` con `useRegisterSW`, RNF-06); banner inline de escoliosis en vez de `confirm()` (RF-306 pulido).
+
+**Fase 4 completa — proyecto terminado.** 50 tests, build 142 KB gzip (Zod incluido, bajo RNF-03). Verificado en navegador: Ajustes (tema/recordatorios/datos), tema claro en dashboard y ajustes, import habilitado en onboarding.
+
+**Pendientes menores (no bloquean):** sparkline de 8 semanas en dashboard (RF-606); totales por dimensión del mes (RF-803); ícono PWA real; verificación formal de contraste AA en todos los pares del tema claro.
 
 ---
 

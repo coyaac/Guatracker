@@ -104,12 +104,15 @@ function StrengthForm({ exercises, routines, onDone }: { exercises: Exercise[]; 
   const [session, setSession] = useState<Draft[]>([])
   const [naming, setNaming] = useState(false)
   const [tplName, setTplName] = useState('')
+  const [pending, setPending] = useState<Exercise | null>(null) // ejercicio no seguro esperando confirmación
 
   const byId = (id: string): Exercise | undefined => exercises.find((e) => e.id === id)
 
+  const addToSession = (ex: Exercise): void => setSession((s) => [...s, { exercise: ex, sets: [defaultSet(ex)] }])
+
   const add = (ex: Exercise): void => {
-    if (!ex.safeForScoliosis && !confirm(`⚠️ ${ex.warning ?? 'Ejercicio no recomendado con escoliosis.'}\n\n¿Registrarlo de todos modos?`)) return
-    setSession((s) => [...s, { exercise: ex, sets: [defaultSet(ex)] }])
+    if (ex.safeForScoliosis) addToSession(ex)
+    else setPending(ex) // RF-306: requiere confirmación adicional
   }
 
   const loadRoutine = (r: Routine): void => {
@@ -141,6 +144,26 @@ function StrengthForm({ exercises, routines, onDone }: { exercises: Exercise[]; 
                 </button>
               </span>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Banner de advertencia para ejercicio no seguro con escoliosis (RF-306) */}
+      {pending && (
+        <div role="alertdialog" aria-label="Advertencia de escoliosis" className="flex flex-col gap-3 rounded-xl border-l-4 p-4" style={{ borderColor: 'var(--color-warn)', background: 'var(--color-raised)' }}>
+          <div>
+            <p className="font-display text-base font-semibold" style={{ color: 'var(--color-warn)' }}>⚠ {pending.name} — no recomendado con escoliosis</p>
+            <p className="mt-1 text-sm text-ink-2">{pending.warning ?? 'Este ejercicio puede no ser seguro con tu escoliosis. Valídalo con tu kinesiólogo.'}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => setPending(null)} className="min-h-[44px] rounded-lg border border-line text-sm font-medium text-ink">Mejor no</button>
+            <button
+              onClick={() => { addToSession(pending); setPending(null) }}
+              className="min-h-[44px] rounded-lg text-sm font-semibold text-bg"
+              style={{ background: 'var(--color-warn)' }}
+            >
+              Registrar igual
+            </button>
           </div>
         </div>
       )}

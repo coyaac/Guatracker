@@ -47,7 +47,34 @@
 }
 
 :root {
-  color-scheme: dark; /* controles nativos (time/number) en oscuro */
+  color-scheme: dark; /* controles nativos (time/number) en oscuro por defecto */
+}
+
+/* Tema claro (RF-906): secundario. Sobrescribe los tokens bajo [data-theme='light'].
+   Contraste apuntado a AA sobre superficies claras. */
+:root[data-theme='light'] {
+  --color-bg: #f5f6fb;
+  --color-surface: #ffffff;
+  --color-raised: #eceef5;
+  --color-line: #d8dbe6;
+  --color-ink: #1a1c22;
+  --color-ink-2: #565a6b;
+  --color-ink-3: #7a7e90;
+  --color-accent: #5d5294;
+  --color-accent-soft: #4a4080;
+  --color-accent-deep: #b5abfc;
+  --color-dim-nutrition: #c2542c;
+  --color-dim-snacking: #c24467;
+  --color-dim-hydration: #1b7e9c;
+  --color-dim-training: #5c4fb0;
+  --color-dim-sleep: #3546a8;
+  --color-tier-flojo: #c2453b;
+  --color-tier-medias: #b87613;
+  --color-tier-bien: #2e8b63;
+  --color-tier-excelente: #5c4fb0;
+  --color-ok: #2e8b63;
+  --color-warn: #b87613;
+  --color-danger: #c2453b;
 }
 
 html,
