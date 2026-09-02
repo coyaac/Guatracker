@@ -25,7 +25,8 @@ export async function weekReport(anchor: ISODate = todayISO()): Promise<WeekRepo
   ])
 
   const water = new Map(days.map((d) => [d.date, d.waterMl]))
-  const count = (k: string): number => food.filter((f) => f.kind === k).length
+  const snacks = food.filter((f) => f.category === 'snack')
+  const snackCount = (k: string): number => snacks.filter((s) => s.snackKind === k).length
 
   const withRecords = new Set<ISODate>()
   food.forEach((f) => withRecords.add(f.date))
@@ -34,10 +35,10 @@ export async function weekReport(anchor: ISODate = todayISO()): Promise<WeekRepo
   workouts.forEach((w) => withRecords.add(w.date))
 
   const agg: WeekAggregate = {
-    fastFood: count('fastfood'),
-    snackSweet: count('snack_sweet'),
-    snackSalty: count('snack_salty'),
-    sugaryDrinks: count('sugary_drink'),
+    fastFood: food.filter((f) => f.category === 'meal' && f.quality === 'fast').length,
+    snackSweet: snackCount('dulce'),
+    snackSalty: snackCount('salado'),
+    sugaryDrinks: snackCount('sugary'),
     waterByDay: dates.map((d) => water.get(d) ?? 0),
     strengthSessions: workouts.filter((w) => w.type === 'strength').length,
     swimSessions: workouts.filter((w) => w.type === 'swim').length,
@@ -75,8 +76,8 @@ export async function monthDailyIndices(month: string, goals: Goals): Promise<Ma
   food.forEach((f) => {
     const a = at(f.date)
     a.hasAnyRecord = true
-    if (f.kind === 'fastfood') a.fastFood++
-    else a.snacks++
+    if (f.category === 'meal' && f.quality === 'fast') a.fastFood++
+    else if (f.category === 'snack') a.snacks++
   })
   days.forEach((d) => {
     const a = at(d.date)
@@ -110,8 +111,8 @@ export async function dayAggregate(date: ISODate = todayISO()): Promise<DayAggre
 
   return {
     waterMl: day?.waterMl ?? 0,
-    fastFood: food.filter((f) => f.kind === 'fastfood').length,
-    snacks: food.filter((f) => f.kind !== 'fastfood').length,
+    fastFood: food.filter((f) => f.category === 'meal' && f.quality === 'fast').length,
+    snacks: food.filter((f) => f.category === 'snack').length,
     sleepHours: sleep?.hours ?? null,
     hadWorkout: workouts.length > 0,
     hasAnyRecord: food.length > 0 || day !== undefined || sleep !== undefined || workouts.length > 0,

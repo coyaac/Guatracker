@@ -1,127 +1,50 @@
 import { useState } from 'react'
-import { addFood, addWater, saveSleep, todayISO } from '../../db/repositories'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { addWater, getSettings, todayISO } from '../../db/repositories'
+import { db } from '../../db/schema'
 import type { ISODate } from '../../domain/dates'
-import type { SleepLog } from '../../db/schema'
+import { Ring } from '../../components/Ring'
+import { MealSheet, SnackSheet, SleepSheet } from './sheets'
 
-// Botón de registro rápido: grande (≥44px), feedback inmediato al tocar.
-const quick =
+const bigBtn =
   'min-h-[52px] rounded-xl px-4 py-2 font-display text-lg font-semibold tracking-wide text-bg transition active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:active:scale-100'
 
 /** `date` opcional para registro retroactivo (RF-106); por defecto hoy. */
 export function QuickLog({ date = todayISO() }: { date?: ISODate }): React.ReactElement {
-  const [panel, setPanel] = useState<'none' | 'snack' | 'sleep'>('none')
+  const [sheet, setSheet] = useState<'none' | 'meal' | 'snack' | 'sleep'>('none')
+  const settings = useLiveQuery(getSettings)
+  const day = useLiveQuery(() => db.days.get(date), [date])
+
+  const goal = settings?.goals.waterMlPerDay ?? 2000
+  const ml = day?.waterMl ?? 0
+  const pct = Math.round((ml / goal) * 100)
 
   return (
     <section aria-label="Registro rápido" className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-2.5">
-        <button className={quick} style={{ background: 'var(--color-dim-hydration)' }} onClick={() => void addWater(250, date)}>
-          + Agua
-        </button>
-        <button
-          className="min-h-[52px] rounded-xl border border-line px-4 py-2 font-display text-lg font-semibold tracking-wide text-ink-2 transition hover:bg-raised active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:active:scale-100"
-          onClick={() => void addWater(-250, date)}
-          aria-label="Deshacer último vaso de agua"
-        >
-          − Deshacer
-        </button>
-        <button className={quick} style={{ background: 'var(--color-dim-nutrition)' }} onClick={() => void addFood('fastfood', undefined, date)}>
-          + Comida rápida
-        </button>
-        <button
-          className={quick}
-          style={{ background: 'var(--color-dim-snacking)' }}
-          onClick={() => setPanel(panel === 'snack' ? 'none' : 'snack')}
-          aria-expanded={panel === 'snack'}
-        >
-          + Picoteo
-        </button>
-        <button
-          className={`${quick} col-span-2`}
-          style={{ background: 'var(--color-dim-sleep)' }}
-          onClick={() => setPanel(panel === 'sleep' ? 'none' : 'sleep')}
-          aria-expanded={panel === 'sleep'}
-        >
-          + Sueño de anoche
-        </button>
+      {/* Agua: anillo diario (llega a 100% en la meta, muestra sobre-% si tomas más) + −/+ */}
+      <div className="flex items-center gap-4 rounded-xl border border-line bg-surface p-4">
+        <Ring value={Math.min(pct, 100)} centerText={`${pct}%`} label="Agua hoy" color="var(--color-dim-hydration)" size={72} />
+        <div className="flex-1">
+          <p className="font-display text-2xl font-semibold tnum text-ink">
+            {ml} <span className="text-base text-ink-3">/ {goal} ml</span>
+          </p>
+          <p className="text-xs text-ink-3">{pct >= 100 ? '¡Meta cumplida! 💧' : `Te faltan ${Math.ceil((goal - ml) / 250)} vasos`}</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => void addWater(-250, date)} aria-label="Quitar un vaso de agua" className="h-12 w-12 rounded-xl border border-line text-2xl text-ink-2 active:scale-95">−</button>
+          <button onClick={() => void addWater(250, date)} aria-label="Agregar un vaso de agua" className="h-12 w-12 rounded-xl text-2xl text-bg active:scale-95" style={{ background: 'var(--color-dim-hydration)' }}>+</button>
+        </div>
       </div>
 
-      {panel === 'snack' && <SnackPicker date={date} onDone={() => setPanel('none')} />}
-      {panel === 'sleep' && <SleepForm date={date} onDone={() => setPanel('none')} />}
+      <div className="grid grid-cols-2 gap-2.5">
+        <button className={bigBtn} style={{ background: 'var(--color-dim-nutrition)' }} onClick={() => setSheet('meal')}>+ Comida</button>
+        <button className={bigBtn} style={{ background: 'var(--color-dim-snacking)' }} onClick={() => setSheet('snack')}>+ Picoteo</button>
+        <button className={`${bigBtn} col-span-2`} style={{ background: 'var(--color-dim-sleep)' }} onClick={() => setSheet('sleep')}>+ Sueño de anoche</button>
+      </div>
+
+      {sheet === 'meal' && <MealSheet date={date} onClose={() => setSheet('none')} />}
+      {sheet === 'snack' && <SnackSheet date={date} onClose={() => setSheet('none')} />}
+      {sheet === 'sleep' && <SleepSheet date={date} onClose={() => setSheet('none')} />}
     </section>
-  )
-}
-
-function SnackPicker({ date, onDone }: { date: ISODate; onDone: () => void }): React.ReactElement {
-  const opts: { kind: Parameters<typeof addFood>[0]; label: string }[] = [
-    { kind: 'snack_sweet', label: 'Dulce' },
-    { kind: 'snack_salty', label: 'Salado' },
-    { kind: 'sugary_drink', label: 'Bebida azucarada' },
-  ]
-  return (
-    <div className="grid grid-cols-3 gap-2 rounded-xl border border-line bg-surface p-3">
-      {opts.map((o) => (
-        <button
-          key={o.kind}
-          className="min-h-[44px] rounded-lg border border-line px-2 py-2 text-sm font-medium text-ink transition hover:border-dim-snacking hover:text-dim-snacking focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          onClick={() => {
-            void addFood(o.kind, undefined, date)
-            onDone()
-          }}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-function SleepForm({ date, onDone }: { date: ISODate; onDone: () => void }): React.ReactElement {
-  const [bedtime, setBedtime] = useState('01:30')
-  const [wakeTime, setWakeTime] = useState('09:00')
-  const [quality, setQuality] = useState<SleepLog['quality']>('ok')
-
-  const input = 'rounded-lg border border-line bg-raised px-2 py-1.5 text-ink tnum focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent'
-
-  return (
-    <form
-      className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-4"
-      onSubmit={(e) => {
-        e.preventDefault()
-        void saveSleep(date, bedtime, wakeTime, quality)
-        onDone()
-      }}
-    >
-      <label className="flex items-center justify-between gap-2 text-sm text-ink-2">
-        Me acosté
-        <input type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} className={input} required />
-      </label>
-      <label className="flex items-center justify-between gap-2 text-sm text-ink-2">
-        Desperté
-        <input type="time" value={wakeTime} onChange={(e) => setWakeTime(e.target.value)} className={input} required />
-      </label>
-      <fieldset>
-        <legend className="mb-1.5 text-sm text-ink-2">Calidad</legend>
-        <div className="grid grid-cols-3 gap-2">
-          {(['bad', 'ok', 'good'] as const).map((q) => (
-            <label
-              key={q}
-              className={`cursor-pointer rounded-lg border px-2 py-2 text-center text-sm transition ${
-                quality === q ? 'border-dim-sleep text-dim-sleep' : 'border-line text-ink-2'
-              }`}
-            >
-              <input type="radio" name="quality" className="sr-only" checked={quality === q} onChange={() => setQuality(q)} />
-              {q === 'bad' ? 'Mala' : q === 'ok' ? 'Regular' : 'Buena'}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <button
-        type="submit"
-        className="min-h-[48px] rounded-xl font-display text-lg font-semibold tracking-wide text-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        style={{ background: 'var(--color-dim-sleep)' }}
-      >
-        Guardar sueño
-      </button>
-    </form>
   )
 }

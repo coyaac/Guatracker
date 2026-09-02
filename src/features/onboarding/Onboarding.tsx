@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { completeOnboarding, saveSettings } from '../../db/repositories'
 import { DEFAULT_GOALS } from '../../domain/goals'
+import { LogoMark } from '../../components/Logo'
 import { ImportButton } from '../backup/BackupControls'
 
 const MEDICAL_WARNING =
@@ -11,9 +12,12 @@ const primaryBtn =
 
 function Wordmark({ size = 44 }: { size?: number }): React.ReactElement {
   return (
-    <div className="font-display font-semibold leading-none tracking-tight" style={{ fontSize: size }}>
-      <span className="text-accent">Gua</span>
-      <span className="text-ink">tracker</span>
+    <div className="flex items-center gap-3">
+      <LogoMark size={size * 0.95} />
+      <div className="font-display font-semibold leading-none tracking-tight" style={{ fontSize: size }}>
+        <span className="text-accent">Gua</span>
+        <span className="text-ink">tracker</span>
+      </div>
     </div>
   )
 }

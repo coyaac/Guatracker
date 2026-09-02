@@ -9,8 +9,12 @@ const foodSchema = z.object({
   id: z.string(),
   date: isoDate,
   time: z.string().optional(),
-  kind: z.enum(['fastfood', 'snack_sweet', 'snack_salty', 'sugary_drink']),
-  note: z.string().optional(),
+  category: z.enum(['meal', 'snack']),
+  meal: z.enum(['desayuno', 'almuerzo', 'once', 'cena']).optional(),
+  quality: z.enum(['fast', 'real']).optional(),
+  snackKind: z.enum(['dulce', 'salado', 'sugary']).optional(),
+  name: z.string().optional(),
+  quantity: z.number().optional(),
   createdAt: z.number(),
 })
 const daySchema = z.object({ date: isoDate, waterMl: z.number(), realMealsLogged: z.boolean(), zeroDrinks: z.number(), note: z.string().optional() })

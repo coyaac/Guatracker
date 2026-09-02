@@ -7,12 +7,19 @@ import type { WeeklySummary } from '../domain/summary'
 // workouts, exercises, body con una nueva versión de Dexie — las migraciones
 // son aditivas y jamás destruyen datos (RNF-10).
 
+export type Meal = 'desayuno' | 'almuerzo' | 'once' | 'cena'
+export type SnackKind = 'dulce' | 'salado' | 'sugary'
+
 export interface FoodEvent {
   id: string
   date: ISODate
   time?: string
-  kind: 'fastfood' | 'snack_sweet' | 'snack_salty' | 'sugary_drink'
-  note?: string
+  category: 'meal' | 'snack'
+  meal?: Meal // solo category='meal'
+  quality?: 'fast' | 'real' // rápida vs real — solo category='meal'
+  snackKind?: SnackKind // solo category='snack' (sugary cuenta doble en el puntaje)
+  name?: string // "completos", "chocolate", etc.
+  quantity?: number // por defecto 1
   createdAt: number
 }
 
@@ -138,6 +145,41 @@ class BitacoraDB extends Dexie {
     this.version(5).stores({
       photos: 'id',
     })
+    // v6: nuevo modelo de comida (category/meal/quality/snackKind/name/quantity).
+    // Migra las filas viejas (kind → nuevos campos) sin perder datos.
+    this.version(6)
+      .stores({ food: 'id, date, category' })
+      .upgrade(async (tx) => {
+        await tx
+          .table('food')
+          .toCollection()
+          .modify((f: Record<string, unknown>) => {
+            switch (f.kind) {
+              case 'fastfood':
+                f.category = 'meal'
+                f.quality = 'fast'
+                break
+              case 'snack_sweet':
+                f.category = 'snack'
+                f.snackKind = 'dulce'
+                break
+              case 'snack_salty':
+                f.category = 'snack'
+                f.snackKind = 'salado'
+                break
+              case 'sugary_drink':
+                f.category = 'snack'
+                f.snackKind = 'sugary'
+                break
+            }
+            delete f.kind
+            if (f.note && !f.name) {
+              f.name = f.note
+              delete f.note
+            }
+            f.quantity ??= 1
+          })
+      })
   }
 }
 

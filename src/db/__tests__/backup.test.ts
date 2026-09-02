@@ -6,7 +6,7 @@ const valid = {
   schema: 5,
   exportedAt: 1_700_000_000_000,
   data: {
-    food: [{ id: 'a', date: '2026-09-01', kind: 'fastfood', createdAt: 1 }],
+    food: [{ id: 'a', date: '2026-09-01', category: 'meal', quality: 'fast', name: 'completos', quantity: 1, createdAt: 1 }],
     days: [{ date: '2026-09-01', waterMl: 500, realMealsLogged: false, zeroDrinks: 0 }],
   },
 }
@@ -22,8 +22,8 @@ describe('parseBackup (RNF-23)', () => {
     const bad = { ...valid, data: { days: [{ date: 'ayer', waterMl: 1, realMealsLogged: false, zeroDrinks: 0 }] } }
     expect(() => parseBackup(bad)).toThrow()
   })
-  it('rechaza un kind de comida inválido', () => {
-    const bad = { ...valid, data: { food: [{ id: 'x', date: '2026-09-01', kind: 'pizza', createdAt: 1 }] } }
+  it('rechaza una categoría de comida inválida', () => {
+    const bad = { ...valid, data: { food: [{ id: 'x', date: '2026-09-01', category: 'pizza', createdAt: 1 }] } }
     expect(() => parseBackup(bad)).toThrow()
   })
 })

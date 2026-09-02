@@ -16,12 +16,22 @@ import type { FoodEvent, Workout } from '../../db/schema'
 import type { ISODate } from '../../domain/dates'
 import { QuickLog } from '../quicklog/QuickLog'
 
-const FOOD_LABEL: Record<FoodEvent['kind'], string> = {
-  fastfood: 'Comida rápida',
-  snack_sweet: 'Picoteo dulce',
-  snack_salty: 'Picoteo salado',
-  sugary_drink: 'Bebida azucarada',
+const MEAL_LABEL = { desayuno: 'Desayuno', almuerzo: 'Almuerzo', once: 'Once', cena: 'Cena' } as const
+
+function foodLabel(f: FoodEvent): string {
+  const name = f.name ? ` · ${f.name}` : ''
+  const qty = f.quantity && f.quantity > 1 ? ` ×${f.quantity}` : ''
+  if (f.category === 'meal') {
+    const meal = f.meal ? MEAL_LABEL[f.meal] : 'Comida'
+    return `${meal} ${f.quality === 'fast' ? 'rápida' : 'real'}${name}${qty}`
+  }
+  const kind = f.snackKind === 'dulce' ? 'Picoteo dulce' : f.snackKind === 'salado' ? 'Picoteo salado' : 'Bebida azucarada'
+  return `${kind}${name}${qty}`
 }
+
+const foodColor = (f: FoodEvent): string =>
+  f.category === 'snack' ? 'var(--color-dim-snacking)' : f.quality === 'fast' ? 'var(--color-dim-nutrition)' : 'var(--color-ok)'
+
 const WORKOUT_LABEL: Record<Workout['type'], string> = {
   swim: 'Natación',
   strength: 'Fuerza',
@@ -78,8 +88,8 @@ export function DayView(): React.ReactElement {
         {food?.map((f) => (
           <Row
             key={f.id}
-            label={`${FOOD_LABEL[f.kind]}${f.time ? ` · ${f.time}` : ''}`}
-            color="var(--color-dim-nutrition)"
+            label={`${foodLabel(f)}${f.time ? ` · ${f.time}` : ''}`}
+            color={foodColor(f)}
             onDelete={() => void deleteFood(f.id)}
           />
         ))}

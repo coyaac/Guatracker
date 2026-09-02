@@ -109,7 +109,7 @@ function DayDetail({ date, index }: { date: ISODate; index: number | null }): Re
   const lines: string[] = []
   if (day?.waterMl) lines.push(`Agua · ${day.waterMl} ml`)
   if (sleep) lines.push(`Sueño · ${sleep.hours} h`)
-  food?.forEach((f) => lines.push(f.kind === 'fastfood' ? 'Comida rápida' : 'Picoteo'))
+  food?.forEach((f) => lines.push(f.category === 'meal' ? `Comida ${f.quality === 'fast' ? 'rápida' : 'real'}` : 'Picoteo'))
   workouts?.forEach((w) => lines.push(w.type === 'swim' ? 'Natación' : w.type === 'strength' ? 'Fuerza' : 'Entreno'))
 
   return (

@@ -9,9 +9,11 @@ import {
   type Exercise,
   type ExerciseSet,
   type FoodEvent,
+  type Meal,
   type Photo,
   type Routine,
   type SleepLog,
+  type SnackKind,
   type Workout,
 } from './schema'
 
@@ -47,13 +49,43 @@ export async function completeOnboarding(input: {
 
 // ---- Comida / picoteo ----
 
-export function addFood(kind: FoodEvent['kind'], note?: string, date: ISODate = todayISO()): Promise<string> {
+const nowTime = (): string => new Date().toTimeString().slice(0, 5)
+
+export function addMeal(input: {
+  meal: Meal
+  quality: 'fast' | 'real'
+  name?: string
+  quantity?: number
+  date?: ISODate
+}): Promise<string> {
   const ev: FoodEvent = {
     id: uid(),
-    date,
-    time: new Date().toTimeString().slice(0, 5),
-    kind,
-    note,
+    date: input.date ?? todayISO(),
+    time: nowTime(),
+    category: 'meal',
+    meal: input.meal,
+    quality: input.quality,
+    name: input.name || undefined,
+    quantity: input.quantity ?? 1,
+    createdAt: Date.now(),
+  }
+  return db.food.add(ev)
+}
+
+export function addSnack(input: {
+  snackKind: SnackKind
+  name?: string
+  quantity?: number
+  date?: ISODate
+}): Promise<string> {
+  const ev: FoodEvent = {
+    id: uid(),
+    date: input.date ?? todayISO(),
+    time: nowTime(),
+    category: 'snack',
+    snackKind: input.snackKind,
+    name: input.name || undefined,
+    quantity: input.quantity ?? 1,
     createdAt: Date.now(),
   }
   return db.food.add(ev)
