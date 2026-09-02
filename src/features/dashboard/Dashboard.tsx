@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { dayAggregate, weekAggregate } from '../../db/aggregate'
 import { getSettings } from '../../db/repositories'
+import { computeStreaks } from '../../db/summaryRepo'
 import { indexTier, weeklyDimensions, weeklyIndex, type Tier } from '../../domain/scoring'
 import type { Dimension } from '../../domain/goals'
 import { Ring } from '../../components/Ring'
@@ -33,6 +34,7 @@ export function Dashboard(): React.ReactElement {
   const settings = useLiveQuery(getSettings)
   const week = useLiveQuery(() => weekAggregate())
   const day = useLiveQuery(() => dayAggregate())
+  const streaks = useLiveQuery(() => computeStreaks())
 
   if (!settings || !week || !day) {
     return <p className="p-6 text-ink-3">Cargando…</p>
@@ -68,6 +70,13 @@ export function Dashboard(): React.ReactElement {
         ))}
       </section>
 
+      {streaks && (streaks.recordDays > 0 || streaks.sleepNights > 0) && (
+        <section aria-label="Rachas" className="grid grid-cols-2 gap-3">
+          <StreakChip emoji="🔥" value={streaks.recordDays} unit={streaks.recordDays === 1 ? 'día registrado' : 'días registrados'} />
+          <StreakChip emoji="🌙" value={streaks.sleepNights} unit={streaks.sleepNights === 1 ? 'noche ≥7 h' : 'noches ≥7 h'} />
+        </section>
+      )}
+
       {missing.length > 0 && (
         <section aria-label="Qué falta hoy" className="rounded-xl border border-line bg-surface p-4">
           <h2 className="mb-2 font-display text-base font-semibold uppercase tracking-wide text-ink-2">Qué falta hoy</h2>
@@ -83,6 +92,18 @@ export function Dashboard(): React.ReactElement {
       )}
 
       <QuickLog />
+    </div>
+  )
+}
+
+function StreakChip({ emoji, value, unit }: { emoji: string; value: number; unit: string }): React.ReactElement {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3">
+      <span aria-hidden className="text-2xl">{emoji}</span>
+      <div>
+        <p className="font-display text-3xl font-semibold leading-none tnum text-ink">{value}</p>
+        <p className="text-xs text-ink-3">{unit}</p>
+      </div>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie'
-import type { ISODate } from '../domain/dates'
+import type { ISODate, ISOWeek } from '../domain/dates'
 import type { Goals } from '../domain/goals'
+import type { WeeklySummary } from '../domain/summary'
 
 // Entidades de §7.1. Fase 1: food, days, sleep, settings. Fase 2 agrega
 // workouts, exercises, body con una nueva versión de Dexie — las migraciones
@@ -101,6 +102,7 @@ class BitacoraDB extends Dexie {
   exercises!: Table<Exercise, string>
   body!: Table<BodyMetric, ISODate>
   routines!: Table<Routine, string>
+  summaries!: Table<WeeklySummary, ISOWeek>
 
   constructor() {
     super('bitacora')
@@ -119,6 +121,10 @@ class BitacoraDB extends Dexie {
     // v3 (Fase 2): plantillas de rutina.
     this.version(3).stores({
       routines: 'id',
+    })
+    // v4 (Fase 3): resúmenes semanales, indexados por semana ISO.
+    this.version(4).stores({
+      summaries: 'week',
     })
   }
 }

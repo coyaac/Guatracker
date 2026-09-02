@@ -110,14 +110,16 @@ export function weeklyDimensions(agg: WeekAggregate, goals: Goals): Record<Dimen
   }
 }
 
-export function weeklyIndex(agg: WeekAggregate, goals: Goals): number {
-  const dims = weeklyDimensions(agg, goals)
+export function indexFromDimensions(dims: Record<Dimension, number>): number {
   const total = (Object.keys(dims) as Dimension[]).reduce(
     (acc, d) => acc + dims[d] * DIMENSION_WEIGHTS[d],
     0,
   )
   return Math.round(total / 100)
 }
+
+export const weeklyIndex = (agg: WeekAggregate, goals: Goals): number =>
+  indexFromDimensions(weeklyDimensions(agg, goals))
 
 // ---- Rangos de color (§7.2). El texto acompaña siempre al color (RNF-18). ----
 

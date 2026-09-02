@@ -87,13 +87,21 @@ El repo está vacío, así que "ya instalado" = nativo del navegador o ya inclui
 
 ---
 
-## Fase 3 — Inteligencia del seguimiento
+## Fase 3 — Inteligencia del seguimiento ✅
 
-**HU:** 12, 13, 14.
-- [ ] `summary.ts` (dominio + tests): resumen semanal determinista (§7.4). Fortalezas, debilidades, **exactamente una** acción por tabla de reglas. Empates: `sleep > training > nutrition > snacking > hydration`. <3 días registrados → "pocos datos". Texto factual, sin culpa (RF-707).
-- [ ] Generación automática cada lunes 00:00 + bajo demanda + historial (RF-701/706).
-- [ ] Vista mensual: heatmap CSS grid por índice diario, detalle al tocar, comparación mes anterior (RF-801..803).
-- [ ] Rachas: sueño ≥7h y días con registro completo (RF-405, RF-605).
+**HU:** 12, 13, 14. · Esquema Dexie v4 con `summaries`.
+- [x] `summary.ts` (dominio + tests): resumen semanal determinista (§7.4). Fortalezas (≥80 o +15), debilidades (<60 o −15), **exactamente una** acción por tabla de reglas. Empates: `sleep > training > nutrition > snacking > hydration`. <3 días → `lowData`. Texto factual, sin culpa (RF-707). `averageBedtime` para la acción de sueño.
+- [x] `streaks.ts` (dominio + tests): racha actual contando días calendario hacia atrás; tolera que hoy aún no esté registrado.
+- [x] Generación del resumen: `ensureLastWeekSummary` al abrir la app (en vez de cron de servidor, para PWA offline) + botón "Actualizar esta semana" (bajo demanda) + historial navegable (RF-701/706). `features/summary/`.
+- [x] Vista mensual: heatmap **CSS grid** por índice diario, "sin datos" (gris) distinto de índice 0, detalle al tocar un día, promedio del mes vs. mes anterior (RF-801..803). `features/month/`. Semana + Mes viven bajo la pestaña **Resumen** (`features/insights/`) con un toggle, para no saturar la nav.
+- [x] Rachas en el dashboard: días con registro (🔥) y noches ≥7 h (🌙) (RF-405/605).
+
+**Fase 3 completa.** Nav de 6 pestañas: Inicio, Entreno, Cuerpo, Día, Resumen, Ajustes. 46 tests, build 115 KB gzip. Verificado en navegador (resumen auto-generado, heatmap, detalle de día, rachas).
+
+**Simplificaciones deliberadas (ponytail):**
+- RF-803: mostré promedio del mes vs. mes anterior; los totales por dimensión del mes quedan para Fase 4 si se piden.
+- RF-606 (sparkline de 8 semanas en el dashboard): pendiente, arrastrado desde Fase 1. Es un `LineChart` de 8 puntos; agregar en el pulido.
+- "Registro completo" (RF-605) se interpretó como "día con algún registro". Afinar si se define un umbral más estricto.
 
 ---
 

@@ -6,15 +6,17 @@ import { Dashboard } from './features/dashboard/Dashboard'
 import { Training } from './features/training/Training'
 import { Body } from './features/body/Body'
 import { DayView } from './features/day/DayView'
+import { Insights } from './features/insights/Insights'
 import { Settings } from './features/settings/Settings'
 
-type View = 'dashboard' | 'training' | 'body' | 'day' | 'settings'
+type View = 'dashboard' | 'training' | 'body' | 'day' | 'insights' | 'settings'
 
 const TABS: { id: View; label: string }[] = [
   { id: 'dashboard', label: 'Inicio' },
   { id: 'training', label: 'Entreno' },
   { id: 'body', label: 'Cuerpo' },
   { id: 'day', label: 'Día' },
+  { id: 'insights', label: 'Resumen' },
   { id: 'settings', label: 'Ajustes' },
 ]
 
@@ -32,6 +34,7 @@ export default function App(): React.ReactElement {
       {view === 'training' && <Training />}
       {view === 'body' && <Body />}
       {view === 'day' && <DayView />}
+      {view === 'insights' && <Insights />}
       {view === 'settings' && <Settings />}
 
       <nav className="fixed inset-x-0 bottom-0 flex border-t border-line bg-surface/95 backdrop-blur">
