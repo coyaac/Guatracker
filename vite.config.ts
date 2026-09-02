@@ -5,7 +5,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
-export default defineConfig({
+// En build para GitHub Pages la app vive bajo /Guatracker/; en dev, en la raíz.
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/Guatracker/' : '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -20,7 +22,7 @@ export default defineConfig({
         theme_color: '#0e101a',
         background_color: '#0e101a',
         display: 'standalone',
-        start_url: '/',
+        // start_url y scope los deriva el plugin desde `base` (/Guatracker/).
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -42,4 +44,4 @@ export default defineConfig({
       include: ['src/domain/**'], // RNF-20: ≥80% en dominio
     },
   },
-})
+}))
