@@ -75,6 +75,13 @@ export interface BodyMetric {
   photoBlobId?: string // Fase 4
 }
 
+// Plantilla de rutina (RF-308): nombre + ejercicios; los pesos se ajustan al registrar.
+export interface Routine {
+  id: string
+  name: string
+  exerciseIds: string[]
+}
+
 // Ajustes + perfil como fila única (id fijo 'app').
 export interface AppSettings {
   id: 'app'
@@ -93,6 +100,7 @@ class BitacoraDB extends Dexie {
   workouts!: Table<Workout, string>
   exercises!: Table<Exercise, string>
   body!: Table<BodyMetric, ISODate>
+  routines!: Table<Routine, string>
 
   constructor() {
     super('bitacora')
@@ -107,6 +115,10 @@ class BitacoraDB extends Dexie {
       workouts: 'id, date, type',
       exercises: 'id, muscleGroup',
       body: 'date',
+    })
+    // v3 (Fase 2): plantillas de rutina.
+    this.version(3).stores({
+      routines: 'id',
     })
   }
 }

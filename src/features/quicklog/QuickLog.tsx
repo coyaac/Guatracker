@@ -1,28 +1,30 @@
 import { useState } from 'react'
 import { addFood, addWater, saveSleep, todayISO } from '../../db/repositories'
+import type { ISODate } from '../../domain/dates'
 import type { SleepLog } from '../../db/schema'
 
 // Botón de registro rápido: grande (≥44px), feedback inmediato al tocar.
 const quick =
   'min-h-[52px] rounded-xl px-4 py-2 font-display text-lg font-semibold tracking-wide text-bg transition active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:active:scale-100'
 
-export function QuickLog(): React.ReactElement {
+/** `date` opcional para registro retroactivo (RF-106); por defecto hoy. */
+export function QuickLog({ date = todayISO() }: { date?: ISODate }): React.ReactElement {
   const [panel, setPanel] = useState<'none' | 'snack' | 'sleep'>('none')
 
   return (
     <section aria-label="Registro rápido" className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-2.5">
-        <button className={quick} style={{ background: 'var(--color-dim-hydration)' }} onClick={() => void addWater(250)}>
+        <button className={quick} style={{ background: 'var(--color-dim-hydration)' }} onClick={() => void addWater(250, date)}>
           + Agua
         </button>
         <button
           className="min-h-[52px] rounded-xl border border-line px-4 py-2 font-display text-lg font-semibold tracking-wide text-ink-2 transition hover:bg-raised active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:active:scale-100"
-          onClick={() => void addWater(-250)}
+          onClick={() => void addWater(-250, date)}
           aria-label="Deshacer último vaso de agua"
         >
           − Deshacer
         </button>
-        <button className={quick} style={{ background: 'var(--color-dim-nutrition)' }} onClick={() => void addFood('fastfood')}>
+        <button className={quick} style={{ background: 'var(--color-dim-nutrition)' }} onClick={() => void addFood('fastfood', undefined, date)}>
           + Comida rápida
         </button>
         <button
@@ -43,13 +45,13 @@ export function QuickLog(): React.ReactElement {
         </button>
       </div>
 
-      {panel === 'snack' && <SnackPicker onDone={() => setPanel('none')} />}
-      {panel === 'sleep' && <SleepForm onDone={() => setPanel('none')} />}
+      {panel === 'snack' && <SnackPicker date={date} onDone={() => setPanel('none')} />}
+      {panel === 'sleep' && <SleepForm date={date} onDone={() => setPanel('none')} />}
     </section>
   )
 }
 
-function SnackPicker({ onDone }: { onDone: () => void }): React.ReactElement {
+function SnackPicker({ date, onDone }: { date: ISODate; onDone: () => void }): React.ReactElement {
   const opts: { kind: Parameters<typeof addFood>[0]; label: string }[] = [
     { kind: 'snack_sweet', label: 'Dulce' },
     { kind: 'snack_salty', label: 'Salado' },
@@ -62,7 +64,7 @@ function SnackPicker({ onDone }: { onDone: () => void }): React.ReactElement {
           key={o.kind}
           className="min-h-[44px] rounded-lg border border-line px-2 py-2 text-sm font-medium text-ink transition hover:border-dim-snacking hover:text-dim-snacking focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           onClick={() => {
-            void addFood(o.kind)
+            void addFood(o.kind, undefined, date)
             onDone()
           }}
         >
@@ -73,7 +75,7 @@ function SnackPicker({ onDone }: { onDone: () => void }): React.ReactElement {
   )
 }
 
-function SleepForm({ onDone }: { onDone: () => void }): React.ReactElement {
+function SleepForm({ date, onDone }: { date: ISODate; onDone: () => void }): React.ReactElement {
   const [bedtime, setBedtime] = useState('01:30')
   const [wakeTime, setWakeTime] = useState('09:00')
   const [quality, setQuality] = useState<SleepLog['quality']>('ok')
@@ -85,7 +87,7 @@ function SleepForm({ onDone }: { onDone: () => void }): React.ReactElement {
       className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-4"
       onSubmit={(e) => {
         e.preventDefault()
-        void saveSleep(todayISO(), bedtime, wakeTime, quality)
+        void saveSleep(date, bedtime, wakeTime, quality)
         onDone()
       }}
     >

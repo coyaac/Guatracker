@@ -9,6 +9,7 @@ import {
   type Exercise,
   type ExerciseSet,
   type FoodEvent,
+  type Routine,
   type SleepLog,
   type Workout,
 } from './schema'
@@ -143,10 +144,25 @@ export const getBodyMetric = (date: ISODate): Promise<BodyMetric | undefined> =>
 /** Todos los registros corporales ordenados por fecha asc (para gráficos). */
 export const listBodyMetrics = (): Promise<BodyMetric[]> => db.body.orderBy('date').toArray()
 
-// ---- Comida: consulta para editar/borrar (RF-105) ----
+// ---- Plantillas de rutina (RF-308) ----
+
+export function saveRoutine(name: string, exerciseIds: string[]): Promise<string> {
+  return db.routines.add({ id: uid(), name, exerciseIds })
+}
+
+export const listRoutines = (): Promise<Routine[]> => db.routines.toArray()
+export const deleteRoutine = (id: string): Promise<void> => db.routines.delete(id)
+
+// ---- Consultas y borrado por día (editar/eliminar, RF-105) ----
 
 export const listFoodByDate = (date: ISODate): Promise<FoodEvent[]> =>
   db.food.where('date').equals(date).toArray()
+
+export const listWorkoutsByDate = (date: ISODate): Promise<Workout[]> =>
+  db.workouts.where('date').equals(date).toArray()
+
+export const getSleep = (date: ISODate): Promise<SleepLog | undefined> => db.sleep.get(date)
+export const deleteSleep = (date: ISODate): Promise<void> => db.sleep.delete(date)
 
 // re-export para conveniencia de la UI
 export { isoWeekOf, todayISO }

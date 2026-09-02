@@ -1,22 +1,36 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { addWorkout, getSettings, listExercises } from '../../db/repositories'
+import {
+  addWorkout,
+  deleteRoutine,
+  exerciseHistory,
+  getSettings,
+  listExercises,
+  listRoutines,
+  saveRoutine,
+} from '../../db/repositories'
 import { weekAggregate } from '../../db/aggregate'
-import type { Exercise, ExerciseSet } from '../../db/schema'
+import type { Exercise, ExerciseSet, Routine } from '../../db/schema'
+import type { MetricPoint } from '../../domain/body'
+import { LineChart } from '../../components/LineChart'
 
 type Draft = { exercise: Exercise; sets: ExerciseSet[] }
 
 const primaryBtn =
-  'min-h-[48px] rounded-xl bg-accent px-4 font-display text-lg font-semibold tracking-wide text-bg transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:active:scale-100'
+  'min-h-[48px] rounded-xl bg-accent px-4 font-display text-lg font-semibold tracking-wide text-bg transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-45 motion-reduce:active:scale-100'
 const numInput = 'w-16 rounded-lg border border-line bg-raised px-2 py-1.5 text-right text-ink tnum focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent'
+
+const defaultSet = (ex: Exercise): ExerciseSet =>
+  ex.metric === 'time' ? { exerciseId: ex.id, seconds: 30 } : { exerciseId: ex.id, reps: 10 }
 
 export function Training(): React.ReactElement {
   const settings = useLiveQuery(getSettings)
   const week = useLiveQuery(() => weekAggregate())
   const exercises = useLiveQuery(listExercises)
+  const routines = useLiveQuery(listRoutines)
   const [mode, setMode] = useState<'none' | 'swim' | 'strength'>('none')
 
-  if (!settings || !week || !exercises) return <p className="p-6 text-ink-3">Cargando…</p>
+  if (!settings || !week || !exercises || !routines) return <p className="p-6 text-ink-3">Cargando…</p>
   const g = settings.goals
 
   return (
@@ -38,7 +52,9 @@ export function Training(): React.ReactElement {
       </div>
 
       {mode === 'swim' && <SwimForm onDone={() => setMode('none')} />}
-      {mode === 'strength' && <StrengthForm exercises={exercises} onDone={() => setMode('none')} />}
+      {mode === 'strength' && <StrengthForm exercises={exercises} routines={routines} onDone={() => setMode('none')} />}
+
+      <Progression exercises={exercises} />
     </div>
   )
 }
@@ -84,15 +100,21 @@ function SwimForm({ onDone }: { onDone: () => void }): React.ReactElement {
   )
 }
 
-function StrengthForm({ exercises, onDone }: { exercises: Exercise[]; onDone: () => void }): React.ReactElement {
+function StrengthForm({ exercises, routines, onDone }: { exercises: Exercise[]; routines: Routine[]; onDone: () => void }): React.ReactElement {
   const [session, setSession] = useState<Draft[]>([])
+  const [naming, setNaming] = useState(false)
+  const [tplName, setTplName] = useState('')
+
+  const byId = (id: string): Exercise | undefined => exercises.find((e) => e.id === id)
 
   const add = (ex: Exercise): void => {
-    if (!ex.safeForScoliosis) {
-      const ok = confirm(`⚠️ ${ex.warning ?? 'Ejercicio no recomendado con escoliosis.'}\n\n¿Registrarlo de todos modos?`)
-      if (!ok) return
-    }
-    setSession((s) => [...s, { exercise: ex, sets: [ex.metric === 'time' ? { exerciseId: ex.id, seconds: 30 } : { exerciseId: ex.id, reps: 10 }] }])
+    if (!ex.safeForScoliosis && !confirm(`⚠️ ${ex.warning ?? 'Ejercicio no recomendado con escoliosis.'}\n\n¿Registrarlo de todos modos?`)) return
+    setSession((s) => [...s, { exercise: ex, sets: [defaultSet(ex)] }])
+  }
+
+  const loadRoutine = (r: Routine): void => {
+    const drafts = r.exerciseIds.map(byId).filter((e): e is Exercise => Boolean(e)).map((ex) => ({ exercise: ex, sets: [defaultSet(ex)] }))
+    setSession(drafts)
   }
 
   const updateSet = (di: number, si: number, patch: Partial<ExerciseSet>): void => {
@@ -104,6 +126,25 @@ function StrengthForm({ exercises, onDone }: { exercises: Exercise[]; onDone: ()
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-4">
+      {/* Plantillas guardadas (RF-308) */}
+      {routines.length > 0 && (
+        <div>
+          <p className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-ink-2">Plantillas</p>
+          <div className="flex flex-wrap gap-2">
+            {routines.map((r) => (
+              <span key={r.id} className="inline-flex items-center gap-1 rounded-lg border border-line pl-3">
+                <button onClick={() => loadRoutine(r)} className="py-1.5 text-sm text-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+                  {r.name}
+                </button>
+                <button onClick={() => void deleteRoutine(r.id)} aria-label={`Eliminar plantilla ${r.name}`} className="px-2 py-1.5 text-ink-3 hover:text-danger">
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Biblioteca */}
       <div>
         <p className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-ink-2">Biblioteca</p>
@@ -154,6 +195,33 @@ function StrengthForm({ exercises, onDone }: { exercises: Exercise[]; onDone: ()
               <button onClick={() => addSet(di)} className="text-xs text-accent-soft">+ serie</button>
             </div>
           ))}
+
+          {/* Guardar como plantilla (input inline, sin prompt bloqueante) */}
+          {naming ? (
+            <div className="flex gap-2">
+              <input
+                autoFocus
+                value={tplName}
+                onChange={(e) => setTplName(e.target.value)}
+                placeholder="Nombre de la plantilla"
+                className="flex-1 rounded-lg border border-line bg-raised px-3 py-2 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+              />
+              <button
+                onClick={() => {
+                  if (tplName.trim()) void saveRoutine(tplName.trim(), session.map((d) => d.exercise.id))
+                  setNaming(false)
+                  setTplName('')
+                }}
+                className="rounded-lg border border-accent px-3 text-sm text-accent-soft"
+              >
+                Guardar
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setNaming(true)} className="self-start text-sm text-accent-soft">
+              ☆ Guardar sesión como plantilla
+            </button>
+          )}
         </div>
       )}
 
@@ -168,5 +236,40 @@ function StrengthForm({ exercises, onDone }: { exercises: Exercise[]; onDone: ()
         Guardar sesión
       </button>
     </div>
+  )
+}
+
+/** Progresión de carga de un ejercicio (RF-309). */
+function Progression({ exercises }: { exercises: Exercise[] }): React.ReactElement {
+  const [id, setId] = useState('')
+  const history = useLiveQuery(() => (id ? exerciseHistory(id) : Promise.resolve([])), [id])
+  const ex = exercises.find((e) => e.id === id)
+
+  // De más antiguo a más nuevo, tomando el valor de la métrica del ejercicio.
+  const points: MetricPoint[] = (history ?? [])
+    .slice()
+    .reverse()
+    .map((h) => ({ date: h.date, value: (ex?.metric === 'time' ? h.set.seconds : h.set.weightKg) ?? 0 }))
+    .filter((p) => p.value > 0)
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="font-display text-xl font-semibold text-ink">Progresión de carga</h2>
+      <select
+        value={id}
+        onChange={(e) => setId(e.target.value)}
+        className="rounded-lg border border-line bg-raised px-3 py-2 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        <option value="">Elige un ejercicio…</option>
+        {exercises.map((e) => (
+          <option key={e.id} value={e.id}>{e.name}</option>
+        ))}
+      </select>
+      {id && (
+        <div className="rounded-xl border border-line bg-surface p-3">
+          <LineChart points={points} color="var(--color-dim-training)" unit={ex?.metric === 'time' ? ' s' : ' kg'} />
+        </div>
+      )}
+    </section>
   )
 }

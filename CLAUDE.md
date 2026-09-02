@@ -78,9 +78,10 @@ El repo está vacío, así que "ya instalado" = nativo del navegador o ya inclui
 - [x] Natación con RPE (RF-301). Contadores M5/M6 de la semana (RF-307).
 - [x] Peso (1/día, reemplaza) y medidas (`features/body/`) (RF-501/502). Gráficos: peso con media móvil 7d + cintura destacada, variaciones vs. 4 semanas / inicio (RF-504/505/506). **Chart SVG a mano — NO se usó Recharts** (respeta RNF-03; bundle 108 KB gzip). Dominio `body.ts` con tests.
 
-**Pendiente de Fase 2 (siguiente chunk):**
-- [ ] Editar/eliminar registros de últimos 7 días y retroactivo hasta 30 (RF-105/106, HU-08). Falta la UI; `deleteFood`/`deleteWorkout`/`listFoodByDate` ya existen en el repo.
-- [ ] Plantillas de rutina (RF-308) e historial/progresión de carga UI (RF-309). El repo ya tiene `exerciseHistory`; falta pantalla.
+- [x] Editar/eliminar registros + retroactivo hasta 30 días (RF-105/106, HU-08). Pantalla `features/day/DayView.tsx`: selector de fecha (hoy…−30), lista de registros del día con borrar en vivo, y `QuickLog` parametrizado con fecha para registro retroactivo. Editar = borrar + re-registrar (sueño/cuerpo se reemplazan por PK de fecha).
+- [x] Plantillas de rutina (RF-308) + progresión de carga (RF-309). Tabla `routines` (Dexie v3). En la sesión de fuerza: cargar/guardar/borrar plantillas (input inline, sin `prompt()`). Sección "Progresión de carga": selector de ejercicio → `LineChart` de peso/tiempo en el tiempo (`exerciseHistory`).
+
+**Fase 2 completa.** Nav de 5 pestañas: Inicio, Entreno, Cuerpo, Día, Ajustes. Verificado en navegador (retroactivo, borrado en vivo, progresión). tsc limpio, 32 tests, build 111 KB gzip.
 
 > **Fix aplicado en esta fase:** el `confirm()` de escoliosis es funcional pero el diseño (§8) pide un banner serio inline — reemplazar en el pulido de Fase 4.
 
