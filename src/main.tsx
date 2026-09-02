@@ -2,7 +2,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import App from './App.tsx'
+import { ensureExerciseSeed } from './db/repositories'
 import './index.css'
+
+// Carga la biblioteca de ejercicios en la primera ejecución (idempotente).
+void ensureExerciseSeed()
 
 // Registra el service worker → app instalable y offline (RNF-05..07).
 // ponytail: recarga en la próxima navegación al haber versión nueva;

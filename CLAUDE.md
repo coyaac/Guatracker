@@ -72,13 +72,17 @@ El repo está vacío, así que "ya instalado" = nativo del navegador o ya inclui
 
 ## Fase 2 — Entrenamiento y cuerpo
 
-**HU:** 06, 07, 08, 09.
-- [ ] Seed de biblioteca de ejercicios (`data/exercises.seed.ts`, anexo del spec) con `safeForScoliosis` y `warning`.
-- [ ] Sesión de fuerza: series/reps/peso/segundos según `metric`; confirmación extra si `safeForScoliosis: false` (RF-306).
-- [ ] Plantillas de rutina (RF-308), historial y progresión de carga (RF-309).
-- [ ] Natación con RPE (RF-301). Contadores M5/M6 (RF-307).
-- [ ] Editar/eliminar registros de últimos 7 días y retroactivo hasta 30 (RF-105/106).
-- [ ] Peso (1/día, reemplaza) y medidas (RF-501/502). Gráficos: peso con media móvil 7d, cintura destacada (RF-504/505). ← primer uso de Recharts, lazy.
+**HU:** 06, 07, 08, 09. · Esquema Dexie v2 (aditiva) con `workouts`, `exercises`, `body`.
+- [x] Seed de biblioteca de ejercicios (`data/exercises.seed.ts`) con `safeForScoliosis` y `warning`. Se siembra en el primer arranque (`ensureExerciseSeed`).
+- [x] Sesión de fuerza (`features/training/`): series/reps/peso/segundos según `metric`; **confirmación extra si `safeForScoliosis: false`** (RF-306, vía `confirm()`). Badge ⚠ escoliosis en la biblioteca.
+- [x] Natación con RPE (RF-301). Contadores M5/M6 de la semana (RF-307).
+- [x] Peso (1/día, reemplaza) y medidas (`features/body/`) (RF-501/502). Gráficos: peso con media móvil 7d + cintura destacada, variaciones vs. 4 semanas / inicio (RF-504/505/506). **Chart SVG a mano — NO se usó Recharts** (respeta RNF-03; bundle 108 KB gzip). Dominio `body.ts` con tests.
+
+**Pendiente de Fase 2 (siguiente chunk):**
+- [ ] Editar/eliminar registros de últimos 7 días y retroactivo hasta 30 (RF-105/106, HU-08). Falta la UI; `deleteFood`/`deleteWorkout`/`listFoodByDate` ya existen en el repo.
+- [ ] Plantillas de rutina (RF-308) e historial/progresión de carga UI (RF-309). El repo ya tiene `exerciseHistory`; falta pantalla.
+
+> **Fix aplicado en esta fase:** el `confirm()` de escoliosis es funcional pero el diseño (§8) pide un banner serio inline — reemplazar en el pulido de Fase 4.
 
 ---
 

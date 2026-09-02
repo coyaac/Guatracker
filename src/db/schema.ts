@@ -2,9 +2,9 @@ import Dexie, { type Table } from 'dexie'
 import type { ISODate } from '../domain/dates'
 import type { Goals } from '../domain/goals'
 
-// Entidades de §7.1 usadas en Fase 1. Las de Fase 2+ (Workout, BodyMetric,
-// Exercise, WeeklySummary) se agregan con nuevas versiones de Dexie —
-// las migraciones son aditivas y jamás destruyen datos (RNF-10).
+// Entidades de §7.1. Fase 1: food, days, sleep, settings. Fase 2 agrega
+// workouts, exercises, body con una nueva versión de Dexie — las migraciones
+// son aditivas y jamás destruyen datos (RNF-10).
 
 export interface FoodEvent {
   id: string
@@ -31,6 +31,50 @@ export interface SleepLog {
   quality: 'bad' | 'ok' | 'good'
 }
 
+// ── Fase 2 ──
+
+export type MuscleGroup = 'core' | 'back' | 'chest' | 'shoulders' | 'legs' | 'glutes' | 'arms'
+
+export interface Exercise {
+  id: string
+  name: string
+  muscleGroup: MuscleGroup
+  metric: 'reps' | 'time'
+  safeForScoliosis: boolean
+  cue: string
+  warning?: string // se muestra si safeForScoliosis === false
+  isCustom: boolean
+}
+
+export interface ExerciseSet {
+  exerciseId: string
+  reps?: number
+  weightKg?: number
+  seconds?: number // isométricos (plancha)
+}
+
+export interface Workout {
+  id: string
+  date: ISODate
+  type: 'swim' | 'strength' | 'walk' | 'other'
+  durationMin: number
+  rpe?: number // 1–10
+  sets?: ExerciseSet[] // solo en 'strength'
+  note?: string
+  createdAt: number
+}
+
+export interface BodyMetric {
+  date: ISODate // clave primaria — 1 registro/día, el nuevo reemplaza
+  weightKg?: number
+  waistCm?: number
+  abdomenCm?: number
+  hipCm?: number
+  chestCm?: number
+  armCm?: number
+  photoBlobId?: string // Fase 4
+}
+
 // Ajustes + perfil como fila única (id fijo 'app').
 export interface AppSettings {
   id: 'app'
@@ -46,6 +90,9 @@ class BitacoraDB extends Dexie {
   days!: Table<DayLog, ISODate>
   sleep!: Table<SleepLog, ISODate>
   settings!: Table<AppSettings, string>
+  workouts!: Table<Workout, string>
+  exercises!: Table<Exercise, string>
+  body!: Table<BodyMetric, ISODate>
 
   constructor() {
     super('bitacora')
@@ -54,6 +101,12 @@ class BitacoraDB extends Dexie {
       days: 'date',
       sleep: 'date',
       settings: 'id',
+    })
+    // v2 (Fase 2): aditiva, no toca las tablas de v1.
+    this.version(2).stores({
+      workouts: 'id, date, type',
+      exercises: 'id, muscleGroup',
+      body: 'date',
     })
   }
 }

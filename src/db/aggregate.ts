@@ -9,10 +9,11 @@ export async function weekAggregate(today: ISODate = todayISO()): Promise<WeekAg
   const start = dates[0]
   const end = dates[dates.length - 1]
 
-  const [food, days, sleep] = await Promise.all([
+  const [food, days, sleep, workouts] = await Promise.all([
     db.food.where('date').between(start, end, true, true).toArray(),
     db.days.where('date').between(start, end, true, true).toArray(),
     db.sleep.where('date').between(start, end, true, true).toArray(),
+    db.workouts.where('date').between(start, end, true, true).toArray(),
   ])
 
   const water = new Map(days.map((d) => [d.date, d.waterMl]))
@@ -24,8 +25,8 @@ export async function weekAggregate(today: ISODate = todayISO()): Promise<WeekAg
     snackSalty: count('snack_salty'),
     sugaryDrinks: count('sugary_drink'),
     waterByDay: dates.map((d) => water.get(d) ?? 0),
-    strengthSessions: 0,
-    swimSessions: 0,
+    strengthSessions: workouts.filter((w) => w.type === 'strength').length,
+    swimSessions: workouts.filter((w) => w.type === 'swim').length,
     sleepNights: sleep.map((s) => ({ hours: s.hours, bedtime: s.bedtime })),
     daysElapsed: dates.length,
   }
@@ -33,10 +34,11 @@ export async function weekAggregate(today: ISODate = todayISO()): Promise<WeekAg
 
 /** Agregado de un solo día (índice diario / "qué falta hoy"). */
 export async function dayAggregate(date: ISODate = todayISO()): Promise<DayAggregate> {
-  const [food, day, sleep] = await Promise.all([
+  const [food, day, sleep, workouts] = await Promise.all([
     db.food.where('date').equals(date).toArray(),
     db.days.get(date),
     db.sleep.get(date),
+    db.workouts.where('date').equals(date).toArray(),
   ])
 
   return {
@@ -44,7 +46,7 @@ export async function dayAggregate(date: ISODate = todayISO()): Promise<DayAggre
     fastFood: food.filter((f) => f.kind === 'fastfood').length,
     snacks: food.filter((f) => f.kind !== 'fastfood').length,
     sleepHours: sleep?.hours ?? null,
-    hadWorkout: false, // Fase 2
-    hasAnyRecord: food.length > 0 || day !== undefined || sleep !== undefined,
+    hadWorkout: workouts.length > 0,
+    hasAnyRecord: food.length > 0 || day !== undefined || sleep !== undefined || workouts.length > 0,
   }
 }

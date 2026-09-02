@@ -1,7 +1,17 @@
 import { isoWeekOf, sleepHours, todayISO } from '../domain/dates'
 import type { ISODate } from '../domain/dates'
 import { DEFAULT_GOALS, type Goals } from '../domain/goals'
-import { db, type AppSettings, type FoodEvent, type SleepLog } from './schema'
+import { EXERCISE_SEED } from '../data/exercises.seed'
+import {
+  db,
+  type AppSettings,
+  type BodyMetric,
+  type Exercise,
+  type ExerciseSet,
+  type FoodEvent,
+  type SleepLog,
+  type Workout,
+} from './schema'
 
 const uid = (): string =>
   globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -75,6 +85,68 @@ export function saveSleep(
 ): Promise<ISODate> {
   return db.sleep.put({ date, bedtime, wakeTime, hours: sleepHours(bedtime, wakeTime), quality })
 }
+
+// ---- Ejercicios (biblioteca) ----
+
+export async function ensureExerciseSeed(): Promise<void> {
+  const n = await db.exercises.count()
+  if (n === 0) await db.exercises.bulkAdd(EXERCISE_SEED)
+}
+
+export const listExercises = (): Promise<Exercise[]> => db.exercises.orderBy('muscleGroup').toArray()
+
+// ---- Entrenamiento (RF-301..309) ----
+
+export function addWorkout(input: {
+  type: Workout['type']
+  durationMin: number
+  rpe?: number
+  sets?: ExerciseSet[]
+  note?: string
+  date?: ISODate
+}): Promise<string> {
+  const w: Workout = {
+    id: uid(),
+    date: input.date ?? todayISO(),
+    type: input.type,
+    durationMin: input.durationMin,
+    rpe: input.rpe,
+    sets: input.sets,
+    note: input.note,
+    createdAt: Date.now(),
+  }
+  return db.workouts.add(w)
+}
+
+export const deleteWorkout = (id: string): Promise<void> => db.workouts.delete(id)
+
+/** Historial de un ejercicio, más reciente primero (RF-309). */
+export async function exerciseHistory(
+  exerciseId: string,
+): Promise<{ date: ISODate; set: ExerciseSet }[]> {
+  const workouts = await db.workouts.where('type').equals('strength').toArray()
+  return workouts
+    .flatMap((w) => (w.sets ?? []).filter((s) => s.exerciseId === exerciseId).map((set) => ({ date: w.date, set })))
+    .sort((a, b) => b.date.localeCompare(a.date))
+}
+
+// ---- Peso y medidas (RF-501..506) ----
+
+/** Guarda/actualiza el registro del día, fusionando con lo ya escrito (1/día). */
+export async function saveBodyMetric(date: ISODate, patch: Partial<BodyMetric>): Promise<void> {
+  const current = await db.body.get(date)
+  await db.body.put({ ...current, ...patch, date })
+}
+
+export const getBodyMetric = (date: ISODate): Promise<BodyMetric | undefined> => db.body.get(date)
+
+/** Todos los registros corporales ordenados por fecha asc (para gráficos). */
+export const listBodyMetrics = (): Promise<BodyMetric[]> => db.body.orderBy('date').toArray()
+
+// ---- Comida: consulta para editar/borrar (RF-105) ----
+
+export const listFoodByDate = (date: ISODate): Promise<FoodEvent[]> =>
+  db.food.where('date').equals(date).toArray()
 
 // re-export para conveniencia de la UI
 export { isoWeekOf, todayISO }
